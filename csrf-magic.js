@@ -59,5 +59,23 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
             }
             return jQuery.csrf_ajax( s );
         }
+    } else if (window.Prototype) {
+        // This works for script.aculo.us too
+        Ajax.Request.prototype.csrf_initialize = Ajax.Request.prototype.initialize;
+        Ajax.Request.prototype.initialize = function (url, options) {
+            // Prototype has somewhat strange behavior in that it
+            // simulates all other request types with post
+            if (options.method.toLowerCase() != 'get') {
+                // Do not edit the options hash
+                var params = Object.clone(options.parameters);
+                if (typeof params == 'string') {
+                    params = csrfMagicName + '=' + csrfMagicToken + '&' + options.parameters;
+                } else {
+                    params[csrfMagicName] = csrfMagicToken;
+                }
+                options.parameters = params;
+            }
+            this.csrf_initialize(url, options);
+        }
     }
 }

@@ -52,13 +52,13 @@ include csrf-magic.php.
 automatically detect and play nice with the following JavaScript frameworks:
 
 * jQuery
+* Prototype
+* script.aculo.us (via Prototype)
 
 We are currently implementing support for these JavaScript libraries:
 
 * Yahoo UI Library
-* script.aculo.us
-* prototype
-* MooTools 
+* MooTools
 * Ext
 * Dojo
 

@@ -5,15 +5,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <title>jQuery test page for csrf-magic</title>
-<script src="jquery-1.2.6.js" type="text/javascript"></script>
+<?php $loc = print_javascript('jquery', 'http://code.jquery.com/jquery-latest.js') ?>
 </head>
 <body>
 <h1>jQuery test page for csrf-magic</h1>
-<textarea id="js-output" cols="80" rows="10"></textarea>
+<p>Using <?php echo $loc ?></p>
+<textarea id="js-output" cols="80" rows="3"></textarea>
 <script type="text/javascript">
 //<![CDATA[
     var callback = function (data) {
-        document.getElementById('js-output').value = data;
+        document.getElementById('js-output').value = "jQuery " + jQuery.fn.jquery + ":\n\n" +data;
     }
     jQuery.post('jquery.php', 'ajax=yes&foo=bar', callback, 'text');
 //]]>

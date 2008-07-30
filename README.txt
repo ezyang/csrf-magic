@@ -54,11 +54,11 @@ automatically detect and play nice with the following JavaScript frameworks:
 * jQuery
 * Prototype
 * script.aculo.us (via Prototype)
+* MooTools
+* Yahoo UI Library
 
 We are currently implementing support for these JavaScript libraries:
 
-* Yahoo UI Library
-* MooTools
 * Ext
 * Dojo
 

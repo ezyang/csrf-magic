@@ -4,16 +4,33 @@
  * Rewrites XMLHttpRequest to automatically send CSRF token with it. In theory
  * plays nice with other JavaScript libraries, needs testing though.
  */
-
 // Here are the basic overloaded method definitions
-CsrfMagic = new Object;
-CsrfMagic.open = function(method, url, async, username, password) {
+// The wrapper must be set BEFORE onreadystatechange is written to, since
+// a bug in ActiveXObject prevents us from properly testing for it.
+var CsrfMagic = function (real) {
+    // overloaded
+    this.csrf = real;
+    // properties
+    var csrfMagic = this;
+    real.onreadystatechange = function() {
+        csrfMagic._updateProps();
+        return csrfMagic.onreadystatechange ? csrfMagic.onreadystatechange() : null;
+    };
+    csrfMagic._updateProps();
+}
+
+CsrfMagic.prototype.open = function(method, url, async, username, password) {
     if (method == 'POST') this.csrf_isPost = true;
     // deal with Opera bug, thanks jQuery
     if (username) return this.csrf_open(method, url, async, username, password);
     else return this.csrf_open(method, url, async);
 }
-CsrfMagic.send = function(data) {
+CsrfMagic.prototype.csrf_open = function(method, url, async, username, password) {
+    if (username) return this.csrf.open(method, url, async, username, password);
+    else return this.csrf.open(method, url, async);
+}
+
+CsrfMagic.prototype.send = function(data) {
     if (!this.csrf_isPost) this.csrf_send(data);
     prepend = csrfMagicName + '=' + csrfMagicToken + '&';
     if (this.csrf_purportedLength === undefined) {
@@ -23,7 +40,11 @@ CsrfMagic.send = function(data) {
     delete this.csrf_isPost;
     return this.csrf_send(prepend + data);
 }
-CsrfMagic.setRequestHeader = function(header, value) {
+CsrfMagic.prototype.csrf_send = function(data) {
+    return this.csrf.send(data);
+}
+
+CsrfMagic.prototype.setRequestHeader = function(header, value) {
     // We have to auto-set this at the end, since we don't know how long the
     // nonce is when added to the data.
     if (this.csrf_isPost && header == "Content-length") {
@@ -32,6 +53,30 @@ CsrfMagic.setRequestHeader = function(header, value) {
     }
     return this.csrf_setRequestHeader(header, value);
 }
+CsrfMagic.prototype.csrf_setRequestHeader = function(header, value) {
+    return this.csrf.setRequestHeader(header, value);
+}
+
+CsrfMagic.prototype.abort = function () {
+    return this.csrf.abort();
+}
+CsrfMagic.prototype.getAllResponseHeaders = function() {
+    return this.csrf.getAllResponseHeaders();
+}
+CsrfMagic.prototype.getResponseHeader = function(header) {
+    return this.csrf.getResponseHeader(header);
+}
+
+// proprietary
+CsrfMagic.prototype._updateProps = function() {
+    this.readyState   = this.csrf.readyState;
+    if (this.readyState == 4) {
+        this.responseText = this.csrf.responseText;
+        this.responseXML  = this.csrf.responseXML;
+        this.status       = this.csrf.status;
+        this.statusText   = this.csrf.statusText;
+    }
+}
 CsrfMagic.process = function(base) {
     var prepend = csrfMagicName + '=' + csrfMagicToken;
     if (base) return prepend + '&' + base;
@@ -39,14 +84,14 @@ CsrfMagic.process = function(base) {
 }
 
 // Sets things up for Mozilla/Opera/nice browsers
-if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
+if (0 && window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
     XMLHttpRequest.prototype.csrf_open = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.csrf_send = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.csrf_setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
     
-    XMLHttpRequest.prototype.open = CsrfMagic.open;
-    XMLHttpRequest.prototype.send = CsrfMagic.send;
-    XMLHttpRequest.prototype.setRequestHeader = CsrfMagic.setRequestHeader
+    XMLHttpRequest.prototype.open = CsrfMagic.prototype.open;
+    XMLHttpRequest.prototype.send = CsrfMagic.prototype.send;
+    XMLHttpRequest.prototype.setRequestHeader = CsrfMagic.prototype.setRequestHeader
 } else {
     // The only way we can do this is by modifying a library you have been
     // using. We plan to support YUI, script.aculo.us, prototype, MooTools, 
@@ -96,6 +141,14 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
                 options.data = CsrfMagic.process(options.data);
             }
             return this.csrf_send(options);
+        }
+    } else if (window.YAHOO) {
+        YAHOO.util.Connect.csrf_createXhrObject = YAHOO.util.Connect.createXhrObject;
+        YAHOO.util.Connect.createXhrObject = function (transaction) {
+            obj = YAHOO.util.Connect.csrf_createXhrObject(transaction);
+            var old = obj.conn;
+            obj.conn = new CsrfMagic(old);
+            return obj;
         }
     }
 }

@@ -10,13 +10,16 @@
 <body>
 <h1>jQuery test page for csrf-magic</h1>
 <p>Using <?php echo $loc ?></p>
-<textarea id="js-output" cols="80" rows="3"></textarea>
+<textarea id="js-output" cols="80" rows="4"></textarea>
 <script type="text/javascript">
 //<![CDATA[
+    var textarea = document.getElementById('js-output');
+    textarea.value = "jQuery " + jQuery.fn.jquery + "\n";
     var callback = function (data) {
-        document.getElementById('js-output').value = "jQuery " + jQuery.fn.jquery + ":\n\n" +data;
+        textarea.value += data;
     }
     jQuery.post('jquery.php', 'ajax=yes&foo=bar', callback, 'text');
+    jQuery.post('jquery.php', {ajax: 'yes', foo: 'bar'}, callback, 'text');
 //]]>
 </script>
 </body>

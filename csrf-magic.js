@@ -32,6 +32,11 @@ CsrfMagic.setRequestHeader = function(header, value) {
     }
     return this.csrf_setRequestHeader(header, value);
 }
+CsrfMagic.process = function(base) {
+    var prepend = csrfMagicName + '=' + csrfMagicToken;
+    if (base) return prepend + '&' + base;
+    return prepend;
+}
 
 // Sets things up for Mozilla/Opera/nice browsers
 if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
@@ -50,12 +55,11 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
         jQuery.csrf_ajax = jQuery.ajax;
         jQuery.ajax = function( s ) {
             if (s.type && s.type.toUpperCase() == 'POST') {
+                s = jQuery.extend(true, s, jQuery.extend(true, {}, jQuery.ajaxSettings, s));
                 if ( s.data && s.processData && typeof s.data != "string" ) {
                     s.data = jQuery.param(s.data);
                 }
-                var append = csrfMagicName + '=' + csrfMagicToken;
-                if (!s.data) s.data = append;
-                else s.data = append + '&' + s.data;
+                s.data = CsrfMagic.process(s.data);
             }
             return jQuery.csrf_ajax( s );
         }
@@ -65,17 +69,33 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
         Ajax.Request.prototype.initialize = function (url, options) {
             // Prototype has somewhat strange behavior in that it
             // simulates all other request types with post
-            if (options.method.toLowerCase() != 'get') {
+            if (!options.method || options.method.toLowerCase() != 'get') {
                 // Do not edit the options hash
-                var params = Object.clone(options.parameters);
-                if (typeof params == 'string') {
-                    params = csrfMagicName + '=' + csrfMagicToken + '&' + options.parameters;
+                var params
+                if (typeof options.parameters == 'string') {
+                    params = CsrfMagic.process(options.parameters);
                 } else {
+                    params = Object.clone(options.parameters);
                     params[csrfMagicName] = csrfMagicToken;
                 }
                 options.parameters = params;
             }
-            this.csrf_initialize(url, options);
+            return this.csrf_initialize(url, options);
+        }
+    } else if (window.MooTools) {
+        Request.prototype.csrf_send = Request.prototype.send;
+        Request.prototype.send = function (options) {
+            // perform BC changes to get this into our liked form
+            var type = $type(options);
+            if (type == 'string' || type == 'element') options = {data: options};
+            var old = this.options;
+            options = $extend({data: old.data, url: old.url, method: old.method}, options);
+            var method = options.method, data = options.data;
+            if (method == 'post' || this.options.emulation && ['put', 'delete'].contains(method)) {
+                // data isn't supported as hash
+                options.data = CsrfMagic.process(options.data);
+            }
+            return this.csrf_send(options);
         }
     }
 }

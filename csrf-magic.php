@@ -88,7 +88,7 @@ function csrf_check($fatal = true) {
         $ok = true;
     } while (false);
     if ($fatal && !$ok) {
-        echo '<html><body>You failed CSRF protection</body></html>';
+        echo '<html><body>You failed CSRF protection</body></html>'.PHP_EOL;
         exit;
     }
 }

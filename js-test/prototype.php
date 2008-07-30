@@ -10,19 +10,25 @@
 <body>
 <h1>Prototype test page for csrf-magic</h1>
 <p>Using <?php echo $loc ?></p>
-<textarea id="js-output" cols="80" rows="3"></textarea>
+<textarea id="js-output" cols="80" rows="4"></textarea>
 <script type="text/javascript">
 //<![CDATA[
+    var textarea = document.getElementById('js-output');
+    textarea.value = "Prototype " + Prototype.Version + ":\n";
     var callback = function (transport) {
-        document.getElementById('js-output').value = "Prototype " + Prototype.Version + ":\n\n" + transport.responseText;
+        textarea.value += transport.responseText;
     }
     new Ajax.Request('prototype.php',
     {
-        method: 'post',
         parameters: {
             ajax: 'yes',
             foo: 'bar'
         },
+        onSuccess: callback
+    });
+    new Ajax.Request('prototype.php',
+    {
+        parameters: 'ajax=yes&foo=bar',
         onSuccess: callback
     });
 //]]>

@@ -56,9 +56,6 @@ automatically detect and play nice with the following JavaScript frameworks:
 * script.aculo.us (via Prototype)
 * MooTools
 * Yahoo UI Library
-
-We are currently implementing support for these JavaScript libraries:
-
 * Ext
 * Dojo
 
@@ -66,14 +63,21 @@ If you are not using any of these JavaScript libraries, AJAX requests will
 only work for browsers with support for XmlHttpRequest.prototype (this excludes
 all versions of Internet Explorer).
 
-To rewrite your own JavaScript library to use csrf-magic.js, note that when
-JavaScript is enabled the csrfMagicName and csrfMagicToken global variables
-become available.  Simply add this to all POST AJAX requests as:
+To rewrite your own JavaScript library to use csrf-magic.js, you should modify
+your function that generates XMLHttpRequest to have this at the end:
 
-    csrfMagicName + '=' + csrfMagicToken
+    return new CsrfMagic(xhrObject);
 
-You can see examples of these implementations in csrf-magic.js. Also, feel free
-to prune csrf-magic.js to the code you need (just be careful when updating!)
+With whatever xhrObject may be. If you have literal instances of XMLHttpRequest
+in your code, find and replace ''new XMLHttpRequest'' with ''new CsrfMagic''
+(CsrfMagic will automatically instantiate an XMLHttpRequest object in a
+cross-platform manner as necessary).
+
+If you don't want csrf-magic monkeying around with your XMLHttpRequest object,
+you can manually rewrite your AJAX code to include the variable. The important
+information is stored in the global variables csrfMagicName and csrfMagicToken.
+CsrfMagic.process may also be of interest, as it takes one parameter, a
+querystring, and prepends the CSRF token to the value.
 
 
 3.  CONFIGURE
@@ -90,6 +94,8 @@ For example:
         csrf_conf('rewrite-js', '/csrf-magic.js');
     }
     include_once '/path/to/csrf-magic.php';
+
+Configuration gets stored in the $GLOBALS['csrf'] array.
 
 
 4.  THANKS

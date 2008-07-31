@@ -8,7 +8,11 @@
 // The wrapper must be set BEFORE onreadystatechange is written to, since
 // a bug in ActiveXObject prevents us from properly testing for it.
 var CsrfMagic = function (real) {
-    // overloaded
+    // try to make it ourselves, if you didn't pass it
+    if (!real) try { real = new XMLHttpRequest; } catch (e) {;}
+    if (!real) try { real = new ActiveXObject('Msxml2.XMLHTTP'); } catch (e) {;}
+    if (!real) try { real = new ActiveXObject('Microsoft.XMLHTTP'); } catch (e) {;}
+    if (!real) try { real = new ActiveXObject('Msxml2.XMLHTTP.4.0'); } catch (e) {;}
     this.csrf = real;
     // properties
     var csrfMagic = this;
@@ -89,6 +93,8 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
     XMLHttpRequest.prototype.csrf_send = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.csrf_setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
     
+    // Notice that CsrfMagic is itself an instantiatable object, but only
+    // open, send and setRequestHeader are necessary as decorators.
     XMLHttpRequest.prototype.open = CsrfMagic.prototype.open;
     XMLHttpRequest.prototype.send = CsrfMagic.prototype.send;
     XMLHttpRequest.prototype.setRequestHeader = CsrfMagic.prototype.setRequestHeader;
@@ -128,6 +134,22 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
             var old = obj.conn;
             obj.conn = new CsrfMagic(old);
             return obj;
+        }
+    } else if (window.Ext) {
+        // Ext can use other js libraries as loaders, so it has to come last
+        // Ext's implementation is pretty identical to Yahoo's, but we duplicate
+        // it for comprehensiveness's sake.
+        Ext.lib.Ajax.csrf_createXhrObject = Ext.lib.Ajax.createXhrObject;
+        Ext.lib.Ajax.createXhrObject = function (transaction) {
+            obj = Ext.lib.Ajax.csrf_createXhrObject(transaction);
+            var old = obj.conn;
+            obj.conn = new CsrfMagic(old);
+            return obj;
+        }
+    } else if (window.dojo) {
+        dojo.csrf__xhrObj = dojo._xhrObj;
+        dojo._xhrObj = function () {
+            return new CsrfMagic(dojo.csrf__xhrObj());
         }
     }
 }

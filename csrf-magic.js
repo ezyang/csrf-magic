@@ -69,7 +69,7 @@ CsrfMagic.prototype.getResponseHeader = function(header) {
 
 // proprietary
 CsrfMagic.prototype._updateProps = function() {
-    this.readyState   = this.csrf.readyState;
+    this.readyState = this.csrf.readyState;
     if (this.readyState == 4) {
         this.responseText = this.csrf.responseText;
         this.responseXML  = this.csrf.responseXML;

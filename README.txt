@@ -51,13 +51,13 @@ include csrf-magic.php.
 (Be sure to place csrf-magic.js somewhere web accessible).  csrf-magic.js will
 automatically detect and play nice with the following JavaScript frameworks:
 
-* jQuery
-* Prototype
-* script.aculo.us (via Prototype)
-* MooTools
-* Yahoo UI Library
-* Ext
-* Dojo
+    * jQuery
+    * Prototype
+    * script.aculo.us (via Prototype)
+    * MooTools
+    * Yahoo UI Library
+    * Ext
+    * Dojo
 
 If you are not using any of these JavaScript libraries, AJAX requests will
 only work for browsers with support for XmlHttpRequest.prototype (this excludes
@@ -119,3 +119,22 @@ esp the frame breaker which we can automatically write in.
     
     See also:
         http://own-the.net/cat_CSRF-(XSRF)_news.html
+
+
+6.   KNOWN BUGS
+
+When an AJAX call is performed within an iframe, our rewriting of XMLHttpRequest
+my fail for the first page load.  Subsequent page loads will work properly.
+
+
+7.   TODO
+
+    * Offer more token generation algorithms (including IP/username based
+      generation using a secret, tokens with expiration dates, alternative
+      cookies.)
+
+    * Minify csrf-magic.js for performance.
+
+    * Allow callbacks for CSRF failure handling.
+
+    * Optional PHP5 exception support.

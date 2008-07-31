@@ -100,9 +100,7 @@ function csrf_get_token() {
     $secret = $GLOBALS['csrf']['secret'];
     csrf_start();
     if (session_id()) return 'sid:' . sha1($secret . session_id());
-    // Ok, session failed, let's see if we've got an IP address
-    
-    // Uh-oh, you need some configuration!
+    // :TODO: Implement more algorithms
     return 'invalid';
 }
 

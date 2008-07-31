@@ -84,19 +84,21 @@ CsrfMagic.process = function(base) {
 }
 
 // Sets things up for Mozilla/Opera/nice browsers
-if (0 && window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
+if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
     XMLHttpRequest.prototype.csrf_open = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.csrf_send = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.csrf_setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
     
     XMLHttpRequest.prototype.open = CsrfMagic.prototype.open;
     XMLHttpRequest.prototype.send = CsrfMagic.prototype.send;
-    XMLHttpRequest.prototype.setRequestHeader = CsrfMagic.prototype.setRequestHeader
+    XMLHttpRequest.prototype.setRequestHeader = CsrfMagic.prototype.setRequestHeader;
 } else {
     // The only way we can do this is by modifying a library you have been
     // using. We plan to support YUI, script.aculo.us, prototype, MooTools, 
     // jQuery, Ext and Dojo.
     if (window.jQuery) {
+        // jQuery didn't implement a new XMLHttpRequest function, so we have
+        // to do this the hard way.
         jQuery.csrf_ajax = jQuery.ajax;
         jQuery.ajax = function( s ) {
             if (s.type && s.type.toUpperCase() == 'POST') {
@@ -110,37 +112,14 @@ if (0 && window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
         }
     } else if (window.Prototype) {
         // This works for script.aculo.us too
-        Ajax.Request.prototype.csrf_initialize = Ajax.Request.prototype.initialize;
-        Ajax.Request.prototype.initialize = function (url, options) {
-            // Prototype has somewhat strange behavior in that it
-            // simulates all other request types with post
-            if (!options.method || options.method.toLowerCase() != 'get') {
-                // Do not edit the options hash
-                var params
-                if (typeof options.parameters == 'string') {
-                    params = CsrfMagic.process(options.parameters);
-                } else {
-                    params = Object.clone(options.parameters);
-                    params[csrfMagicName] = csrfMagicToken;
-                }
-                options.parameters = params;
-            }
-            return this.csrf_initialize(url, options);
+        Ajax.csrf_getTransport = Ajax.getTransport;
+        Ajax.getTransport = function() {
+            return new CsrfMagic(Ajax.csrf_getTransport());
         }
     } else if (window.MooTools) {
-        Request.prototype.csrf_send = Request.prototype.send;
-        Request.prototype.send = function (options) {
-            // perform BC changes to get this into our liked form
-            var type = $type(options);
-            if (type == 'string' || type == 'element') options = {data: options};
-            var old = this.options;
-            options = $extend({data: old.data, url: old.url, method: old.method}, options);
-            var method = options.method, data = options.data;
-            if (method == 'post' || this.options.emulation && ['put', 'delete'].contains(method)) {
-                // data isn't supported as hash
-                options.data = CsrfMagic.process(options.data);
-            }
-            return this.csrf_send(options);
+        Browser.csrf_Request = Browser.Request;
+        Browser.Request = function () {
+            return new CsrfMagic(Browser.csrf_Request());
         }
     } else if (window.YAHOO) {
         YAHOO.util.Connect.csrf_createXhrObject = YAHOO.util.Connect.createXhrObject;

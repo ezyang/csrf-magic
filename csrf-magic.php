@@ -112,24 +112,17 @@ $GLOBALS['csrf']['xhtml'] = true;
  * inject our JavaScript library.
  */
 function csrf_ob_handler($buffer, $flags) {
-    // Extra PHP5 sugar; if headers_list() is available we can check if the
-    // user set a different content-type
-    if (function_exists('headers_list')) {
-        $headers = headers_list();
-        $is_html = true;
-        foreach ($headers as $header) {
-            if (strpos($header, ':') === false) continue;
-            list($k, $v) = explode(':', $header);
-            if (
-                strcasecmp(trim($k), 'Content-Type') === 0 &&
-                // only compare the first nine, since charset could be set
-                strncasecmp(trim($v), 'text/html', 9) !== 0
-            ) {
-                $is_html = false;
-                break;
-            }
+    // Even though the user told us to rewrite, we should do a quick heuristic
+    // to check if the page is *actually* HTML. We don't begin rewriting until
+    // we hit the first <html tag.
+    static $is_html = false;
+    if (!$is_html) {
+        // not HTML until proven otherwise
+        if (stripos($buffer, '<html') !== false) {
+            $is_html = true;
+        } else {
+            return $buffer;
         }
-        if (!$is_html) return $buffer;
     }
     $token = csrf_get_token();
     $name = $GLOBALS['csrf']['input-name'];
@@ -201,7 +194,8 @@ function csrf_get_token() {
 }
 
 function csrf_callback() {
-    echo "<html><body>CSRF check failed. Please enable cookies.</body></html>
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+    echo "<html><head><title>CSRF check failed</title></head><body>CSRF check failed. Please enable cookies.</body></html>
 ";
 }
 

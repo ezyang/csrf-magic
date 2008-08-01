@@ -92,6 +92,8 @@ CsrfMagic.process = function(base) {
 }
 // callback function for when everything on the page has loaded
 CsrfMagic.end = function() {
+    // This rewrites forms AGAIN, so in case buffering didn't work this
+    // certainly will.
     forms = document.getElementsByTagName('form');
     for (var i = 0; i < forms.length; i++) {
         form = forms[i];
@@ -173,6 +175,3 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
         }
     }
 }
-
-// Form rewriter
-

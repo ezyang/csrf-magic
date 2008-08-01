@@ -98,6 +98,12 @@ For example, this is a recommended configuration:
 
     function csrf_startup() {
 
+        // While csrf-magic has a handy little heuristic for determining whether
+        // or not the content in the buffer is HTML or not, you should really
+        // give it a nudge and turn rewriting *off* when the content is
+        // not HTML. Implementation details will vary.
+        if (isset($_POST['ajax'])) csrf_conf('rewrite', false);
+
         // This is a secret value that must be set in order to enable username
         // and IP based checks. Don't show this to anyone. A secret id will
         // automatically be generated for you if the directory csrf-magic.php
@@ -147,9 +153,3 @@ esp the frame breaker which we can automatically write in.
 
     See also:
         http://own-the.net/cat_CSRF-(XSRF)_news.html
-
-
-6.   KNOWN BUGS
-
-When an AJAX call is performed within an iframe, our rewriting of XMLHttpRequest
-my fail for the first page load.  Subsequent page loads will work properly.

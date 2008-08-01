@@ -20,7 +20,9 @@ if (isset($_POST['ajax'])) {
 <body>
 <h1>Test page for csrf-magic</h1>
 <p>
-  This page might be vulnerable to CSRF!
+  This page might be vulnerable to CSRF, but never fear: csrf-magic is here!
+  Close by: <a href="js-test/all.php">tests for Internet Explorer support with
+  all the major JavaScript libraries!</a>
 </p>
 <?php if ($_SERVER['REQUEST_METHOD'] == 'POST') { ?>
 <p>Post data:</p>
@@ -36,8 +38,12 @@ if (isset($_POST['ajax'])) {
   Another form field! <INPUT TYPE="TEXT" NAME="BARFOO" /><BR />
   <INPUT TYPE="SUBMIT" value="Submit 2" />
 </FORM>
+<form action="" method="post">
+  This form fails CSRF validation (we cheated and overrode the CSRF token
+  later in the form.) <input type="submit" name="__csrf_magic" value="invalid" />
+</form>
 <form action="" method="get">
-  This form is not protected.
+  This form uses GET and is thus not protected.
   <input type="submit" name="foo" value="Submit" />
 </form>
 <p>
@@ -47,7 +53,7 @@ if (isset($_POST['ajax'])) {
 <script type="text/javascript">
 //<![CDATA[
     params = 'ajax=yes&var=foo';
-    var http = new XMLHttpRequest();
+    var http = new CsrfMagic();
     http.open('POST', 'test.php', true);
     http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     http.setRequestHeader("Content-length", params.length);

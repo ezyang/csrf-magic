@@ -86,13 +86,39 @@ csrf-magic has some configuration options that you can set inside the
 csrf_startup() function. They are described in csrf-magic.php, and you can
 set them using the convenience function csrf_conf($name, $value).
 
-For example:
+For example, this is a recommended configuration:
+
+    /**
+     * This is a function that gets called if a csrf check fails. csrf-magic will
+     * then exit afterwards.
+     */
+    function my_csrf_callback() {
+        echo "You're doing bad things young man!";
+    }
 
     function csrf_startup() {
-        csrf_conf('input-name', 'magic-token');
+
+        // This is a secret value that must be set in order to enable username
+        // and IP based checks. Don't show this to anyone.
         csrf_conf('secret', 'ABCDEFG123456');
+
+        // This enables JavaScript rewriting and will ensure your AJAX calls
+        // don't stop working.
         csrf_conf('rewrite-js', '/csrf-magic.js');
+
+        // This makes csrf-magic call my_csrf_callback() before exiting when
+        // there is a bad csrf token. This lets me customize the error page.
+        csrf_conf('callback', 'my_csrf_callback');
+
+        // While this is enabled by default to boost backwards compatibility,
+        // for security purposes it should ideally be off. Some users can be
+        // NATted or have dialup addresses which rotate frequently. Cookies
+        // are much more reliable.
+        csrf_conf('allow-ip', false);
+
     }
+
+    // Finally, include the library
     include_once '/path/to/csrf-magic.php';
 
 Configuration gets stored in the $GLOBALS['csrf'] array.
@@ -116,7 +142,7 @@ esp the frame breaker which we can automatically write in.
     button from the other website which activates the action.  Nonces will
     not protect against this type of attack, and csrf-magic doesn't deal with
     this type of attack.
-    
+
     See also:
         http://own-the.net/cat_CSRF-(XSRF)_news.html
 
@@ -129,12 +155,15 @@ my fail for the first page load.  Subsequent page loads will work properly.
 
 7.   TODO
 
-    * Offer more token generation algorithms (including IP/username based
-      generation using a secret, tokens with expiration dates, alternative
-      cookies.)
-
     * Minify csrf-magic.js for performance.
 
-    * Allow callbacks for CSRF failure handling.
-
     * Optional PHP5 exception support.
+
+    * Auto-generate secret.
+
+    * Make "first time" session more robust by double-submitting.
+
+    * Test manual JavaScript overloading instructions.
+
+    * Account for JavaScript generated-forms with some JavaScript that loads into
+      some global onsubmit handler and checks form submissions accordingly.

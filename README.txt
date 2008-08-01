@@ -153,15 +153,3 @@ esp the frame breaker which we can automatically write in.
 
 When an AJAX call is performed within an iframe, our rewriting of XMLHttpRequest
 my fail for the first page load.  Subsequent page loads will work properly.
-
-
-7.   TODO
-
-    * Minify csrf-magic.js for performance.
-
-    * Auto-generate secret.
-
-    * (?) Make "first time" session more robust by double-submitting.
-
-    * Account for JavaScript generated-forms with some JavaScript that loads into
-      some global onsubmit handler and checks form submissions accordingly.

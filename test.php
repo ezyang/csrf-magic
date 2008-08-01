@@ -2,6 +2,7 @@
 
 function csrf_startup() {
     csrf_conf('rewrite-js', 'csrf-magic.js');
+    if (isset($_POST['ajax'])) csrf_conf('rewrite', false);
 }
 include dirname(__FILE__) . '/csrf-magic.php';
 
@@ -49,7 +50,12 @@ if (isset($_POST['ajax'])) {
 <p>
   How about some JavaScript?
 </p>
-<textarea id="js-output" cols="80" rows="10"></textarea>
+<script type="text/javascript">
+//<![CDATA[
+    document.writeln('<for'+'m action="" method="post">Dynamically generated form: <input type="submit" /></form>');
+//]]>
+</script>
+<textarea id="js-output" cols="80" rows="2"></textarea>
 <script type="text/javascript">
 //<![CDATA[
     params = 'ajax=yes&var=foo';
@@ -59,7 +65,7 @@ if (isset($_POST['ajax'])) {
     http.setRequestHeader("Content-length", params.length);
     http.setRequestHeader("Connection", "close");
     http.onreadystatechange = function () {
-        document.getElementById('js-output').value = http.responseText;
+        document.getElementById('js-output').value = 'Ajax: ' + http.responseText;
     }
     http.send(params);
 //]]>

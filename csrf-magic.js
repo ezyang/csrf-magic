@@ -4,6 +4,7 @@
  * Rewrites XMLHttpRequest to automatically send CSRF token with it. In theory
  * plays nice with other JavaScript libraries, needs testing though.
  */
+
 // Here are the basic overloaded method definitions
 // The wrapper must be set BEFORE onreadystatechange is written to, since
 // a bug in ActiveXObject prevents us from properly testing for it.
@@ -74,7 +75,6 @@ CsrfMagic.prototype = {
     } // ,
 }
 
-
 // proprietary
 CsrfMagic.prototype._updateProps = function() {
     this.readyState = this.csrf.readyState;
@@ -89,6 +89,20 @@ CsrfMagic.process = function(base) {
     var prepend = csrfMagicName + '=' + csrfMagicToken;
     if (base) return prepend + '&' + base;
     return prepend;
+}
+// callback function for when everything on the page has loaded
+CsrfMagic.end = function() {
+    forms = document.getElementsByTagName('form');
+    for (var i = 0; i < forms.length; i++) {
+        form = forms[i];
+        if (form.method.toUpperCase() !== 'POST') continue;
+        if (form.elements[csrfMagicName]) continue;
+        var input = document.createElement('input');
+        input.setAttribute('name',  csrfMagicName);
+        input.setAttribute('value', csrfMagicToken);
+        input.setAttribute('type',  'hidden');
+        form.appendChild(input);
+    }
 }
 
 // Sets things up for Mozilla/Opera/nice browsers
@@ -108,7 +122,7 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
     x.setRequestHeader = c.setRequestHeader;
 } else {
     // The only way we can do this is by modifying a library you have been
-    // using. We plan to support YUI, script.aculo.us, prototype, MooTools,
+    // using. We support YUI, script.aculo.us, prototype, MooTools,
     // jQuery, Ext and Dojo.
     if (window.jQuery) {
         // jQuery didn't implement a new XMLHttpRequest function, so we have
@@ -159,3 +173,6 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
         }
     }
 }
+
+// Form rewriter
+

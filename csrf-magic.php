@@ -48,6 +48,13 @@ $GLOBALS['csrf']['rewrite-js'] = false;
 $GLOBALS['csrf']['secret'] = '';
 
 /**
+ * Set this to false to disable csrf-magic's output handler, and therefore,
+ * its rewriting capabilities. If you're serving non HTML content, you should
+ * definitely set this false.
+ */
+$GLOBALS['csrf']['rewrite'] = true;
+
+/**
  * Whether or not to use IP addresses when binding a user to a token. This is
  * less reliable and less secure than sessions, but is useful when you need
  * to give facilities to anonymous users and do not wish to maintain a database
@@ -105,6 +112,25 @@ $GLOBALS['csrf']['xhtml'] = true;
  * inject our JavaScript library.
  */
 function csrf_ob_handler($buffer, $flags) {
+    // Extra PHP5 sugar; if headers_list() is available we can check if the
+    // user set a different content-type
+    if (function_exists('headers_list')) {
+        $headers = headers_list();
+        $is_html = true;
+        foreach ($headers as $header) {
+            if (strpos($header, ':') === false) continue;
+            list($k, $v) = explode(':', $header);
+            if (
+                strcasecmp(trim($k), 'Content-Type') === 0 &&
+                // only compare the first nine, since charset could be set
+                strncasecmp(trim($v), 'text/html', 9) !== 0
+            ) {
+                $is_html = false;
+                break;
+            }
+        }
+        if (!$is_html) return $buffer;
+    }
     $token = csrf_get_token();
     $name = $GLOBALS['csrf']['input-name'];
     $endslash = $GLOBALS['csrf']['xhtml'] ? ' /' : '';
@@ -119,6 +145,11 @@ function csrf_ob_handler($buffer, $flags) {
             '<script src="'.$js.'" type="text/javascript"></script>$1',
             $buffer
         );
+        $script = '<script type="text/javascript">CsrfMagic.end();</script>';
+        $buffer = str_ireplace('</body>', $script . '</body>', $buffer, $count);
+        if (!$count) {
+            $buffer .= $script;
+        }
     }
     return $buffer;
 }
@@ -246,9 +277,9 @@ function csrf_get_secret() {
     return '';
 }
 
-// Initialize our handler
-ob_start('csrf_ob_handler');
 // Load user configuration
 if (function_exists('csrf_startup')) csrf_startup();
+// Initialize our handler
+if ($GLOBALS['csrf']['rewrite'])     ob_start('csrf_ob_handler');
 // Perform check
-if (!$GLOBALS['csrf']['defer']) csrf_check();
+if (!$GLOBALS['csrf']['defer'])      csrf_check();

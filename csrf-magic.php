@@ -152,7 +152,7 @@ function csrf_check($fatal = true) {
  * Retrieves a valid token for a particular context.
  */
 function csrf_get_token() {
-    $secret = $GLOBALS['csrf']['secret'];
+    $secret = csrf_get_secret();
     csrf_start();
     // These are "strong" algorithms that don't require per se a secret
     if (session_id()) return 'sid:' . sha1($secret . session_id());
@@ -180,7 +180,7 @@ function csrf_callback() {
 function csrf_check_token($token) {
     if (strpos($token, ':') === false) return false;
     list($type, $value) = explode(':', $token, 2);
-    $secret = $GLOBALS['csrf']['secret'];
+    $secret = csrf_get_secret();
     switch ($type) {
         case 'sid':
             return $value === sha1($secret . session_id());
@@ -222,6 +222,28 @@ function csrf_start() {
     if ($GLOBALS['csrf']['auto-session'] && !session_id()) {
         session_start();
     }
+}
+
+/**
+ * Retrieves the secret, and generates one if necessary.
+ */
+function csrf_get_secret() {
+    if ($GLOBALS['csrf']['secret']) return $GLOBALS['csrf']['secret'];
+    $dir = dirname(__FILE__);
+    $file = $dir . '/csrf-secret.php';
+    $secret = '';
+    if (file_exists($file)) {
+        include $file;
+        return $secret;
+    }
+    if (is_writable($dir)) {
+        for ($i = 0; $i < 32; $i++) $secret .= '\\x' . dechex(mt_rand(32, 126));
+        $fh = fopen($file, 'w');
+        fwrite($fh, '<?php $secret = "'.$secret.'";' . PHP_EOL);
+        fclose($fh);
+        return $secret;
+    }
+    return '';
 }
 
 // Initialize our handler

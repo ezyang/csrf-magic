@@ -99,7 +99,9 @@ For example, this is a recommended configuration:
     function csrf_startup() {
 
         // This is a secret value that must be set in order to enable username
-        // and IP based checks. Don't show this to anyone.
+        // and IP based checks. Don't show this to anyone. A secret id will
+        // automatically be generated for you if the directory csrf-magic.php
+        // is placed in is writable.
         csrf_conf('secret', 'ABCDEFG123456');
 
         // This enables JavaScript rewriting and will ensure your AJAX calls
@@ -157,13 +159,9 @@ my fail for the first page load.  Subsequent page loads will work properly.
 
     * Minify csrf-magic.js for performance.
 
-    * Optional PHP5 exception support.
-
     * Auto-generate secret.
 
-    * Make "first time" session more robust by double-submitting.
-
-    * Test manual JavaScript overloading instructions.
+    * (?) Make "first time" session more robust by double-submitting.
 
     * Account for JavaScript generated-forms with some JavaScript that loads into
       some global onsubmit handler and checks form submissions accordingly.

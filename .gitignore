@@ -1,3 +1,4 @@
 /js-test/*.js
 /js-test/*.bak
 /js-test/*/
+/csrf-secret.php

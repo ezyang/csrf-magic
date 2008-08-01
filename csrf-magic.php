@@ -1,4 +1,4 @@
-        <?php
+<?php
 
 /**
  * @file
@@ -184,6 +184,12 @@ function csrf_check_token($token) {
     switch ($type) {
         case 'sid':
             return $value === sha1($secret . session_id());
+        case 'key':
+            if (!$GLOBALS['csrf']['key']) return false;
+            return $value === sha1($secret . $GLOBALS['csrf']['key']);
+        // We could disable these 'weaker' checks if 'key' was set, but
+        // that doesn't make me feel good then about the cookie-based
+        // implementation.
         case 'user':
             if ($GLOBALS['csrf']['secret'] === '') return false;
             if ($GLOBALS['csrf']['user'] === false) return false;
@@ -194,8 +200,6 @@ function csrf_check_token($token) {
             if ($GLOBALS['csrf']['user'] !== false) return false;
             if (!$GLOBALS['csrf']['allow-ip']) return false;
             return $value === sha1($secret . $_SERVER['IP_ADDRESS']);
-        default:
-            return false;
     }
     return false;
 }

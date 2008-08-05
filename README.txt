@@ -10,33 +10,8 @@ Do it, test it, then forget about it. csrf-magic is protecting you if nothing
 bad happens. Read on if you run into problems.
 
 
-1.  WHAT DOES IT DO?
 
-CSRF, or cross-site request forgery, is a relatively new attack vector on
-websites today.  It involves an attacker tricking a browser into performing
-an action on another website.  For example, Bob is the human resources manager
-for a large and important company.  He has the ability to hire and fire with
-a click of a button... specifically, a web form button.  Mallory, as a practical
-joke, decides to setup a CSRF attack against Bob; she crafts a webpage which
-submits a form onto the internal website that performs hirings and firings; then
-she sends Bob an email to this webpage.  The next day, every employee wakes up
-to find a rather nasty pink slip in their inbox.
-
-The current standard for preventing CSRF is creating a nonce that every user
-submits with any form he/she submits.  This is reasonably effective [1], but
-incredibly tedious work; if you were hand-writing your forms or have multiple
-avenues for POST data to enter your application, adding CSRF protection may not
-seem worth the trouble (trust me, it certainly is).
-
-This is where csrf-magic comes into play.  csrf-magic uses PHP's output
-buffering capabilities to dynamically rewrite forms and scripts in your document.
-It will also intercept POST requests and check their token (various algorithms
-are used, some generate nonces, some generate user-specific tokens).  This means
-with a traditional website with forms, you can drop it into your application,
-and forget about it!
-
-
-2.  AJAX
+1.  AJAX
 
 csrf-magic has the ability to dynamically rewrite AJAX requests which use
 XMLHttpRequest.  However, due to the invasiveness of this procedure, it is
@@ -80,7 +55,7 @@ CsrfMagic.process may also be of interest, as it takes one parameter, a
 querystring, and prepends the CSRF token to the value.
 
 
-3.  CONFIGURE
+2.  CONFIGURE
 
 csrf-magic has some configuration options that you can set inside the
 csrf_startup() function. They are described in csrf-magic.php, and you can
@@ -132,7 +107,7 @@ For example, this is a recommended configuration:
 Configuration gets stored in the $GLOBALS['csrf'] array.
 
 
-4.  THANKS
+3.  THANKS
 
 My thanks to Chris Shiflett, for unintentionally inspiring the idea, as well
 as telling me the original variant of the Bob and Mallory story,
@@ -142,7 +117,7 @@ http://www.thespanner.co.uk/2007/08/20/protection-against-csrf/ is interesting
 esp the frame breaker which we can automatically write in.
 
 
-5.  FOOTNOTES
+4.  FOOTNOTES
 
 [1] There is an experimental attack in which a user makes an invisible iframe
     of the website being attacked and overlays this on-top of an element on

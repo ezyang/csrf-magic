@@ -127,16 +127,16 @@ function csrf_ob_handler($buffer, $flags) {
             return $buffer;
         }
     }
-    $token = csrf_get_token();
+    $tokens = csrf_get_tokens();
     $name = $GLOBALS['csrf']['input-name'];
     $endslash = $GLOBALS['csrf']['xhtml'] ? ' /' : '';
-    $input = "<input type='hidden' name='$name' value=\"$token\"$endslash>";
+    $input = "<input type='hidden' name='$name' value=\"$tokens\"$endslash>";
     $buffer = preg_replace('#(<form[^>]*method\s*=\s*["\']post["\'][^>]*>)#i', '$1' . $input, $buffer);
     if ($js = $GLOBALS['csrf']['rewrite-js']) {
         $buffer = preg_replace(
             '#(</head>)#i',
             '<script type="text/javascript">'.
-                'var csrfMagicToken = "'.$token.'";'.
+                'var csrfMagicToken = "'.$tokens.'";'.
                 'var csrfMagicName = "'.$name.'";</script>'.
             '<script src="'.$js.'" type="text/javascript"></script>$1',
             $buffer
@@ -164,7 +164,7 @@ function csrf_check($fatal = true) {
         if (!isset($_POST[$name])) break;
         // we don't regenerate a token and check it because some token creation
         // schemes are volatile.
-        if (!csrf_check_token($_POST[$name])) break;
+        if (!csrf_check_tokens($_POST[$name])) break;
         $ok = true;
     } while (false);
     if ($fatal && !$ok) {
@@ -176,22 +176,34 @@ function csrf_check($fatal = true) {
 }
 
 /**
- * Retrieves a valid token for a particular context.
+ * Retrieves a valid token(s) for a particular context. Tokens are separated
+ * by semicolons.
  */
-function csrf_get_token() {
+function csrf_get_tokens() {
     $secret = csrf_get_secret();
+    $has_cookies = !empty($_COOKIE);
+
+    // $ip implements a composite key, which is sent if the user hasn't sent
+    // any cookies. It may or may not be used, depending on whether or not
+    // the cookies "stick"
+    if (!$has_cookies && $secret) {
+        // :TODO: Harden this against proxy-spoofing attacks
+        $ip = ';ip:' . sha1($secret . $_SERVER['IP_ADDRESS']);
+    } else {
+        $ip = '';
+    }
     csrf_start();
+
     // These are "strong" algorithms that don't require per se a secret
-    if (session_id()) return 'sid:' . sha1($secret . session_id());
-    if ($GLOBALS['csrf']['key']) return 'key:' . sha1($secret . $GLOBALS['csrf']['key']);
+    if (session_id()) return 'sid:' . sha1($secret . session_id()) . $ip;
+    if ($GLOBALS['csrf']['key']) return 'key:' . sha1($secret . $GLOBALS['csrf']['key']) . $ip;
     // These further algorithms require a server-side secret
     if ($secret === '') return 'invalid';
     if ($GLOBALS['csrf']['user'] !== false) {
         return 'user:' . sha1($secret . $GLOBALS['csrf']['user']);
     }
     if ($GLOBALS['csrf']['allow-ip']) {
-        // :TODO: Harden this against proxy-spoofing attacks
-        return 'ip:' . sha1($secret . $_SERVER['IP_ADDRESS']);
+        return ltrim($ip, ';');
     }
     return 'invalid';
 }
@@ -200,6 +212,18 @@ function csrf_callback() {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
     echo "<html><head><title>CSRF check failed</title></head><body>CSRF check failed. Please enable cookies.</body></html>
 ";
+}
+
+/**
+ * Checks if a composite token is valid. Outward facing code should use this
+ * instead of csrf_check_token()
+ */
+function csrf_check_tokens($tokens) {
+    if (is_string($tokens)) $tokens = explode(';', $tokens);
+    foreach ($tokens as $token) {
+        if (csrf_check_token($token)) return true;
+    }
+    return false;
 }
 
 /**
@@ -223,9 +247,11 @@ function csrf_check_token($token) {
             if ($GLOBALS['csrf']['user'] === false) return false;
             return $value === sha1($secret . $GLOBALS['csrf']['user']);
         case 'ip':
-            if ($GLOBALS['csrf']['secret'] === '') return false;
-            // do not allow IP-based checks if the username is set
+            if (csrf_get_secret() === '') return false;
+            // do not allow IP-based checks if the username is set, or if
+            // the browser sent cookies
             if ($GLOBALS['csrf']['user'] !== false) return false;
+            if (!empty($_COOKIE)) return false;
             if (!$GLOBALS['csrf']['allow-ip']) return false;
             return $value === sha1($secret . $_SERVER['IP_ADDRESS']);
     }

@@ -10,8 +10,38 @@ Do it, test it, then forget about it. csrf-magic is protecting you if nothing
 bad happens. Read on if you run into problems.
 
 
+                             TABLE OF CONTENTS
+                          + ------------------- +
+                            1. TIPS AND TRICKS
+                            2. AJAX
+                            3. CONFIGURE
+                            4. THANKS
+                            5. FOOTNOTES
+                          + ------------------- +
 
-1.  AJAX
+
+1.  TIPS AND TRICKS
+
+    * If your JavaScript and AJAX is persistently getting errors, check the
+       AJAX section below on how to fix.
+
+    * csrf-magic will start a session.  To disable, use csrf_conf('auto-session',
+      false) in your csrf_startup() function.
+
+    * The default error message is a little user unfriendly.  Write your own
+      function which outputs an error message and set csrf_conf('callback',
+      'myCallbackFunction') in your csrf_startup() function.
+
+    * Make sure csrf_conf('secret', 'ABCDEFG') has something random in it.  If
+      the directory csrf-magic.php is in is writable, csrf-magic will generate
+      a secret key for you in the csrf-secret.php file.
+
+    * Remember you can use auto_prepend to include csrf-magic.php on all your
+      pages.  You may want to create a stub file which you can include that
+      includes csrf-magic.php as well as performs configuration.
+
+
+2.  AJAX
 
 csrf-magic has the ability to dynamically rewrite AJAX requests which use
 XMLHttpRequest.  However, due to the invasiveness of this procedure, it is
@@ -55,7 +85,7 @@ CsrfMagic.process may also be of interest, as it takes one parameter, a
 querystring, and prepends the CSRF token to the value.
 
 
-2.  CONFIGURE
+3.  CONFIGURE
 
 csrf-magic has some configuration options that you can set inside the
 csrf_startup() function. They are described in csrf-magic.php, and you can
@@ -107,7 +137,7 @@ For example, this is a recommended configuration:
 Configuration gets stored in the $GLOBALS['csrf'] array.
 
 
-3.  THANKS
+4.  THANKS
 
 My thanks to Chris Shiflett, for unintentionally inspiring the idea, as well
 as telling me the original variant of the Bob and Mallory story,
@@ -117,7 +147,7 @@ http://www.thespanner.co.uk/2007/08/20/protection-against-csrf/ is interesting
 esp the frame breaker which we can automatically write in.
 
 
-4.  FOOTNOTES
+5.  FOOTNOTES
 
 [1] There is an experimental attack in which a user makes an invisible iframe
     of the website being attacked and overlays this on-top of an element on

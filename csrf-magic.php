@@ -18,12 +18,19 @@
 /**
  * By default, when you include this file csrf-magic will automatically check
  * and exit if the CSRF token is invalid. This will defer executing
- * csrf_check() until you're ready. You can also pass false as a parameter to
+ * csrf_check() until you're ready.  You can also pass false as a parameter to
  * that function, in which case the function will not exit but instead return
  * a boolean false if the CSRF check failed. This allows for tighter integration
  * with your system.
  */
 $GLOBALS['csrf']['defer'] = false;
+
+/**
+ * This is the amount of seconds you wish to allow before any token becomes
+ * invalid; the default is two hours, which should be more than enough for
+ * most websites.
+ */
+$GLOBALS['csrf']['expires'] = 7200;
 
 /**
  * Callback function to execute when there's the CSRF check fails and
@@ -178,7 +185,7 @@ function csrf_check($fatal = true) {
     } while (false);
     if ($fatal && !$ok) {
         $callback = $GLOBALS['csrf']['callback'];
-        if (trim($tokens, 'A..Za..z0..9:;') !== '') $tokens = 'hidden';
+        if (trim($tokens, 'A..Za..z0..9:;,') !== '') $tokens = 'hidden';
         $callback($tokens);
         exit;
     }
@@ -190,7 +197,6 @@ function csrf_check($fatal = true) {
  * by semicolons.
  */
 function csrf_get_tokens() {
-    $secret = csrf_get_secret();
     $has_cookies = !empty($_COOKIE);
 
     // $ip implements a composite key, which is sent if the user hasn't sent
@@ -198,24 +204,24 @@ function csrf_get_tokens() {
     // the cookies "stick"
     if (!$has_cookies && $secret) {
         // :TODO: Harden this against proxy-spoofing attacks
-        $ip = ';ip:' . sha1($secret . $_SERVER['IP_ADDRESS']);
+        $ip = ';ip:' . csrf_hash($_SERVER['IP_ADDRESS']);
     } else {
         $ip = '';
     }
     csrf_start();
 
     // These are "strong" algorithms that don't require per se a secret
-    if (session_id()) return 'sid:' . sha1($secret . session_id()) . $ip;
+    if (session_id()) return 'sid:' . csrf_hash(session_id()) . $ip;
     if ($GLOBALS['csrf']['cookie']) {
         $val = csrf_generate_secret();
         setcookie($GLOBALS['csrf']['cookie'], $val);
-        return 'cookie:' . sha1($secret . $val) . $ip;
+        return 'cookie:' . csrf_hash($val) . $ip;
     }
-    if ($GLOBALS['csrf']['key']) return 'key:' . sha1($secret . $GLOBALS['csrf']['key']) . $ip;
+    if ($GLOBALS['csrf']['key']) return 'key:' . csrf_hash($GLOBALS['csrf']['key']) . $ip;
     // These further algorithms require a server-side secret
     if ($secret === '') return 'invalid';
     if ($GLOBALS['csrf']['user'] !== false) {
-        return 'user:' . sha1($secret . $GLOBALS['csrf']['user']);
+        return 'user:' . csrf_hash($GLOBALS['csrf']['user']);
     }
     if ($GLOBALS['csrf']['allow-ip']) {
         return ltrim($ip, ';');
@@ -250,25 +256,29 @@ function csrf_check_tokens($tokens) {
 function csrf_check_token($token) {
     if (strpos($token, ':') === false) return false;
     list($type, $value) = explode(':', $token, 2);
-    $secret = csrf_get_secret();
+    if (strpos($value, ',') === false) return false;
+    list($x, $time) = explode(',', $token, 2);
+    if ($GLOBALS['csrf']['expires']) {
+        if (time() > $time + $GLOBALS['csrf']['expires']) return false;
+    }
     switch ($type) {
         case 'sid':
-            return $value === sha1($secret . session_id());
+            return $value === csrf_hash(session_id(), $time);
         case 'cookie':
             $n = $GLOBALS['csrf']['cookie'];
             if (!$n) return false;
             if (!isset($_COOKIE[$n])) return false;
-            return $value === sha1($secret . $_COOKIE[$n]);
+            return $value === csrf_hash($_COOKIE[$n], $time);
         case 'key':
             if (!$GLOBALS['csrf']['key']) return false;
-            return $value === sha1($secret . $GLOBALS['csrf']['key']);
+            return $value === csrf_hash($GLOBALS['csrf']['key'], $time);
         // We could disable these 'weaker' checks if 'key' was set, but
         // that doesn't make me feel good then about the cookie-based
         // implementation.
         case 'user':
             if ($GLOBALS['csrf']['secret'] === '') return false;
             if ($GLOBALS['csrf']['user'] === false) return false;
-            return $value === sha1($secret . $GLOBALS['csrf']['user']);
+            return $value === csrf_hash($GLOBALS['csrf']['user'], $time);
         case 'ip':
             if (csrf_get_secret() === '') return false;
             // do not allow IP-based checks if the username is set, or if
@@ -276,7 +286,7 @@ function csrf_check_token($token) {
             if ($GLOBALS['csrf']['user'] !== false) return false;
             if (!empty($_COOKIE)) return false;
             if (!$GLOBALS['csrf']['allow-ip']) return false;
-            return $value === sha1($secret . $_SERVER['IP_ADDRESS']);
+            return $value === csrf_hash($_SERVER['IP_ADDRESS'], $time);
     }
     return false;
 }
@@ -333,6 +343,15 @@ function csrf_generate_secret($len = 32) {
     }
     $secret .= time() . microtime();
     return sha1($secret);
+}
+
+/**
+ * Generates a hash/expiry double. If time isn't set it will be calculated
+ * from the current time.
+ */
+function csrf_hash($value, $time = null) {
+    if (!$time) $time = time();
+    return sha1($secret . $value . $time) . ',' . $time;
 }
 
 // Load user configuration

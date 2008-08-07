@@ -40,6 +40,10 @@ bad happens. Read on if you run into problems.
       pages.  You may want to create a stub file which you can include that
       includes csrf-magic.php as well as performs configuration.
 
+    * The default expiration time for tokens is two hours. If you expect your
+      users to need longer to fill out forms, be sure to enable double
+      submission when the token is invalid.
+
 
 2.  AJAX
 

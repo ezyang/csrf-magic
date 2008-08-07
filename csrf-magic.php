@@ -63,6 +63,13 @@ $GLOBALS['csrf']['rewrite'] = true;
 $GLOBALS['csrf']['allow-ip'] = true;
 
 /**
+ * If this information is available, use the cookie by this name to determine
+ * whether or not to allow the request. This is a shortcut implementation
+ * very similar to 'key', but we randomly set the cookie ourselves.
+ */
+$GLOBALS['csrf']['cookie'] = '__csrf_cookie';
+
+/**
  * If this information is available, set this to a unique identifier (it
  * can be an integer or a unique username) for the current "user" of this
  * application. The token will then be globally valid for all of that user's
@@ -160,16 +167,19 @@ function csrf_check($fatal = true) {
     csrf_start();
     $name = $GLOBALS['csrf']['input-name'];
     $ok = false;
+    $tokens = '';
     do {
         if (!isset($_POST[$name])) break;
         // we don't regenerate a token and check it because some token creation
         // schemes are volatile.
-        if (!csrf_check_tokens($_POST[$name])) break;
+        $tokens = $_POST[$name];
+        if (!csrf_check_tokens($tokens)) break;
         $ok = true;
     } while (false);
     if ($fatal && !$ok) {
         $callback = $GLOBALS['csrf']['callback'];
-        $callback();
+        if (trim($tokens, 'A..Za..z0..9:;') !== '') $tokens = 'hidden';
+        $callback($tokens);
         exit;
     }
     return $ok;
@@ -196,6 +206,11 @@ function csrf_get_tokens() {
 
     // These are "strong" algorithms that don't require per se a secret
     if (session_id()) return 'sid:' . sha1($secret . session_id()) . $ip;
+    if ($GLOBALS['csrf']['cookie']) {
+        $val = csrf_generate_secret();
+        setcookie($GLOBALS['csrf']['cookie'], $val);
+        return 'cookie:' . sha1($secret . $val) . $ip;
+    }
     if ($GLOBALS['csrf']['key']) return 'key:' . sha1($secret . $GLOBALS['csrf']['key']) . $ip;
     // These further algorithms require a server-side secret
     if ($secret === '') return 'invalid';
@@ -208,9 +223,12 @@ function csrf_get_tokens() {
     return 'invalid';
 }
 
-function csrf_callback() {
+/**
+ * @param $tokens is safe for HTML consumption
+ */
+function csrf_callback($tokens) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
-    echo "<html><head><title>CSRF check failed</title></head><body>CSRF check failed. Please enable cookies.</body></html>
+    echo "<html><head><title>CSRF check failed</title></head><body>CSRF check failed. Please enable cookies.<br />Debug: ".$tokens."</body></html>
 ";
 }
 
@@ -236,6 +254,11 @@ function csrf_check_token($token) {
     switch ($type) {
         case 'sid':
             return $value === sha1($secret . session_id());
+        case 'cookie':
+            $n = $GLOBALS['csrf']['cookie'];
+            if (!$n) return false;
+            if (!isset($_COOKIE[$n])) return false;
+            return $value === sha1($secret . $_COOKIE[$n]);
         case 'key':
             if (!$GLOBALS['csrf']['key']) return false;
             return $value === sha1($secret . $GLOBALS['csrf']['key']);
@@ -291,13 +314,25 @@ function csrf_get_secret() {
         return $secret;
     }
     if (is_writable($dir)) {
-        for ($i = 0; $i < 32; $i++) $secret .= '\\x' . dechex(mt_rand(32, 126));
+        $secret = csrf_generate_secret();
         $fh = fopen($file, 'w');
         fwrite($fh, '<?php $secret = "'.$secret.'";' . PHP_EOL);
         fclose($fh);
         return $secret;
     }
     return '';
+}
+
+/**
+ * Generates a random string as the hash of time, microtime, and mt_rand.
+ */
+function csrf_generate_secret($len = 32) {
+    $secret = '';
+    for ($i = 0; $i < 32; $i++) {
+        $secret .= chr(mt_rand(0, 255));
+    }
+    $secret .= time() . microtime();
+    return sha1($secret);
 }
 
 // Load user configuration

@@ -109,6 +109,13 @@ $GLOBALS['csrf']['key'] = false;
 $GLOBALS['csrf']['input-name'] = '__csrf_magic';
 
 /**
+ * Set this to false if your site must work inside of frame/iframe elements,
+ * but do so at your own risk: this configuration protects you against CSS
+ * overlay attacks that defeat tokens.
+ */
+$GLOBALS['csrf']['frame-breaker'] = true;
+
+/**
  * Whether or not CSRF Magic should be allowed to start a new session in order
  * to determine the key.
  */
@@ -146,13 +153,16 @@ function csrf_ob_handler($buffer, $flags) {
     $endslash = $GLOBALS['csrf']['xhtml'] ? ' /' : '';
     $input = "<input type='hidden' name='$name' value=\"$tokens\"$endslash>";
     $buffer = preg_replace('#(<form[^>]*method\s*=\s*["\']post["\'][^>]*>)#i', '$1' . $input, $buffer);
+    if ($GLOBALS['csrf']['frame-breaker']) {
+        $buffer = str_ireplace('</head>', '<script type="text/javascript">if (top != self) {top.location.href = self.location.href;}</script></head>', $buffer);
+    }
     if ($js = $GLOBALS['csrf']['rewrite-js']) {
-        $buffer = preg_replace(
-            '#(</head>)#i',
+        $buffer = str_ireplace(
+            '</head>',
             '<script type="text/javascript">'.
                 'var csrfMagicToken = "'.$tokens.'";'.
                 'var csrfMagicName = "'.$name.'";</script>'.
-            '<script src="'.$js.'" type="text/javascript"></script>$1',
+            '<script src="'.$js.'" type="text/javascript"></script></head>',
             $buffer
         );
         $script = '<script type="text/javascript">CsrfMagic.end();</script>';

@@ -1,5 +1,5 @@
 
-[[  csrf-magic  ]]
+                            [[  csrf-magic  ]]
 
 Add the following line to the top of all web-accessible PHP pages. If you have
 a common file included by everything, put it there.
@@ -23,7 +23,11 @@ bad happens. Read on if you run into problems.
 1.  TIPS AND TRICKS
 
     * If your JavaScript and AJAX is persistently getting errors, check the
-       AJAX section below on how to fix.
+      AJAX section below on how to fix.
+
+    * The CSS overlay protection makes it impossible to display your website
+      in frame/iframe elements.  You can disable it with
+      csrf_conf('frame-breaker', false) in your csrf_startup() function.
 
     * csrf-magic will start a session.  To disable, use csrf_conf('auto-session',
       false) in your csrf_startup() function.
@@ -146,19 +150,5 @@ Configuration gets stored in the $GLOBALS['csrf'] array.
 My thanks to Chris Shiflett, for unintentionally inspiring the idea, as well
 as telling me the original variant of the Bob and Mallory story,
 and the Django CSRF Middleware authors, who thought up of this before me.
-
-http://www.thespanner.co.uk/2007/08/20/protection-against-csrf/ is interesting
-esp the frame breaker which we can automatically write in.
-
-
-5.  FOOTNOTES
-
-[1] There is an experimental attack in which a user makes an invisible iframe
-    of the website being attacked and overlays this on-top of an element on
-    their page that a user would normally click.  This iframe has a different
-    button from the other website which activates the action.  Nonces will
-    not protect against this type of attack, and csrf-magic doesn't deal with
-    this type of attack.
-
-    See also:
-        http://own-the.net/cat_CSRF-(XSRF)_news.html
+Gareth Heyes suggested using the frame-breaker option to protect against
+CSS overlay attacks.

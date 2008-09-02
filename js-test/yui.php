@@ -7,9 +7,9 @@
 <title>Yahoo! UI library test page for csrf-magic</title>
 <?php
 $locs = array();
-$locs[] = print_javascript('yui/build/yahoo/yahoo', 'http://yui.yahooapis.com/2.5.2/build/yahoo/yahoo.js');
-$locs[] = print_javascript('yui/build/event/event', 'http://yui.yahooapis.com/2.5.2/build/event/event.js');
-$locs[] = print_javascript('yui/build/connection/connection', 'http://yui.yahooapis.com/2.5.2/build/connection/connection.js');
+$locs[] = print_javascript('yui/build/yahoo/yahoo', 'http://yui.yahooapis.com/3.0.0pr1/build/yahoo/yahoo.js');
+$locs[] = print_javascript('yui/build/event/event', 'http://yui.yahooapis.com/3.0.0pr1/build/event/event.js');
+$locs[] = print_javascript('yui/build/connection/connection', 'http://yui.yahooapis.com/3.0.0pr1/build/connection/connection.js');
 ?>
 </head>
 <body>

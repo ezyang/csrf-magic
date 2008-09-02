@@ -11,6 +11,7 @@ function print_javascript($name, $web) {
 
 function csrf_startup() {
     csrf_conf('rewrite-js', '../csrf-magic.js');
+    csrf_conf('frame-breaker', false);
 }
 require_once '../csrf-magic.php';
 

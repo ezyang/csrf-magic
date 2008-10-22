@@ -38,7 +38,7 @@ CsrfMagic.prototype = {
     },
 
     send: function(data) {
-        if (!this.csrf_isPost) this.csrf_send(data);
+        if (!this.csrf_isPost) return this.csrf_send(data);
         prepend = csrfMagicName + '=' + csrfMagicToken + '&';
         if (this.csrf_purportedLength === undefined) {
             this.csrf_setRequestHeader("Content-length", this.csrf_purportedLength + prepend.length);

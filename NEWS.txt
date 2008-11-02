@@ -1,0 +1,28 @@
+
+                            [[     news     ]]
+
+1.0.1 released 2008-11-02
+
+ [NEW FEATURES]
+
+    - Support for composite tokens; this also fixes a bug with using
+      IP-based tokens for users with cookies disabled.
+
+    - Native support cookie tokens; use csrf_conf('cookie', $name) to
+      specify the name of a cookie that the CSRF token should be
+      placed in.  This is useful if you have a Squid cache, and need
+      to configure it to ignore this token.
+
+    - Tips/tricks section in README.txt.
+
+    - There is now a two hour expiration time on all tokens.  This
+      can be modified using csrf_conf('expires', $seconds).
+
+    - ClickJacking protection using an iframe breaker.  Disable with
+      csrf_conf('frame-breaker', false).
+
+ [BUG FIXES]
+
+    - CsrfMagic.send() incorrectly submitted GET requests twice,
+      once without the magic token and once with the token.  Reported
+      by Kelly Lu <lubird@gmail.com>.

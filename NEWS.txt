@@ -1,6 +1,16 @@
 
                             [[     news     ]]
 
+1.0.2 released 2009-03-XX
+
+ [SECURITY FIXES]
+
+    - Due to a typo, csrf-magic accidentally treated the secret key
+      as always present.  This means that there was a possible CSRF
+      attack against users without any cookies.  No attacks in the
+      wild were known at the time of this release.  Thanks Jakub
+      Vrána for reporting.
+
 1.0.1 released 2008-11-02
 
  [NEW FEATURES]

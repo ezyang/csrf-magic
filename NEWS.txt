@@ -1,6 +1,15 @@
 
                             [[     news     ]]
 
+1.0.3 unknown release date
+
+ [BUG FIXES]
+
+    - Internet Explorer 8 adds support for XMLHttpRequest.prototype,
+      but this support is broken for method overloading.  We
+      explicitly disable JavaScript overloading for Internet Explorer.
+      Thanks Kelly Lu for reporting. <lubird@gmail.com>
+
 1.0.2 released 2009-03-08
 
  [SECURITY FIXES]

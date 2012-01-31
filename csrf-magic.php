@@ -348,12 +348,12 @@ function csrf_get_secret() {
  * Generates a random string as the hash of time, microtime, and mt_rand.
  */
 function csrf_generate_secret($len = 32) {
-    $secret = '';
+    $r = '';
     for ($i = 0; $i < 32; $i++) {
-        $secret .= chr(mt_rand(0, 255));
+        $r .= chr(mt_rand(0, 255));
     }
-    $secret .= time() . microtime();
-    return sha1($secret);
+    $r .= time() . microtime();
+    return sha1($r);
 }
 
 /**
@@ -362,7 +362,7 @@ function csrf_generate_secret($len = 32) {
  */
 function csrf_hash($value, $time = null) {
     if (!$time) $time = time();
-    return sha1($secret . $value . $time) . ',' . $time;
+    return sha1($GLOBALS['csrf']['secret'] . $value . $time) . ',' . $time;
 }
 
 // Load user configuration

@@ -1,7 +1,7 @@
 
                             [[     news     ]]
 
-1.0.3 unknown release date
+1.0.3 released 2012-01-31
 
  [BUG FIXES]
 
@@ -9,6 +9,10 @@
       but this support is broken for method overloading.  We
       explicitly disable JavaScript overloading for Internet Explorer.
       Thanks Kelly Lu for reporting. <lubird@gmail.com>
+
+    - A global declaration was omitted, resulting in a variable
+      not being properly introduced in PHP 5.3.  Thanks Whitney Beck for
+      reporting. <whitney.a.beck@gmail.com>
 
 1.0.2 released 2009-03-08
 

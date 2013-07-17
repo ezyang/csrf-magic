@@ -131,7 +131,7 @@ $GLOBALS['csrf']['xhtml'] = true;
 // FUNCTIONS:
 
 // Don't edit this!
-$GLOBALS['csrf']['version'] = '1.0.1';
+$GLOBALS['csrf']['version'] = '1.0.4';
 
 /**
  * Rewrites <form> on the fly to add CSRF tokens to them. This can also

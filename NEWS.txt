@@ -1,6 +1,24 @@
 
                             [[     news     ]]
 
+1.0.4 released 2013-07-17
+
+  [SECURITY FIXES]
+
+    - When secret key was not explicitly set, it was not being used
+      by the csrf_hash() function.  Thanks sparticvs for reporting.
+
+  [FEATURES]
+
+    - The default 'CSRF check failed' page now offers a handy 'Try
+      again' button, which resubmits the form.
+
+  [BUG FIXES]
+
+    - The fix for 1.0.3 inadvertantly turned off XMLHttpRequest
+      overloading for all browsers; it has now been fixed to only
+      apply to IE.
+
 1.0.3 released 2012-01-31
 
  [BUG FIXES]

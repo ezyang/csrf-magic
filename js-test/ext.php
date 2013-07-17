@@ -6,19 +6,17 @@
 <head>
 <title>Ext test page for csrf-magic</title>
 <?php
-$locs = array();
-$locs[] = print_javascript('ext/source/adapter/ext-base', 'http://extjs.com/deploy/dev/adapter/ext/ext-base.js');
-$locs[] = print_javascript('ext/ext-core',                 'http://extjs.com/deploy/dev/ext-core.js');
+$loc = print_javascript('ext', 'http://cdn.sencha.io/ext-4.2.0-gpl/ext-all.js');
 ?>
 </head>
 <body>
 <h1>Ext test page for csrf-magic</h1>
-<p>Using <?php echo implode(', ', $locs); ?></p>
+<p>Using <?php echo $loc; ?></p>
 <textarea id="js-output" cols="80" rows="4"></textarea>
 <script type="text/javascript">
 //<![CDATA[
     var textarea = document.getElementById('js-output');
-    textarea.value = "Ext (no version available)\n";
+    textarea.value = "Ext " + Ext.versions.extjs + "\n";
     var callback = function (transport) {
         textarea.value += transport.responseText;
     }

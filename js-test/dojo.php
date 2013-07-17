@@ -6,7 +6,7 @@
 <head>
 <title>Dojo test page for csrf-magic</title>
 <?php $loc = print_javascript('dojo/dojo/dojo.js.uncompressed',
-    'http://dojotoolkit.org/sites/all/modules/dojo/dtk_build/dojo/dojo.js.uncompressed.js'
+    '//ajax.googleapis.com/ajax/libs/dojo/1.9.1/dojo/dojo.js'
 ) ?>
 </head>
 <body>

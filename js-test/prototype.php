@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <title>Prototype test page for csrf-magic</title>
-<?php $loc = print_javascript('prototype', 'http://www.prototypejs.org/javascripts/prototype.js') ?>
+<?php $loc = print_javascript('prototype', 'https://ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js') ?>
 </head>
 <body>
 <h1>Prototype test page for csrf-magic</h1>

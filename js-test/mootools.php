@@ -6,8 +6,7 @@
 <head>
 <title>MooTools test page for csrf-magic</title>
 <?php $loc = print_javascript('mootools',
-    // This link needs to be updated with new versions
-    'http://mootools.net/downloads/mootools-1.2-core-nc.js'
+    '//ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools-yui-compressed.js'
 ) ?>
 </head>
 <body>

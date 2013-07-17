@@ -61,20 +61,26 @@ include csrf-magic.php.
     }
     // include_once '/path/to/csrf-magic.php';
 
-(Be sure to place csrf-magic.js somewhere web accessible).  csrf-magic.js will
+(Be sure to place csrf-magic.js somewhere web accessible).
+
+The default method CSRF Magic uses to rewrite AJAX requests will
+only work for browsers with support for XmlHttpRequest.prototype (this excludes
+all versions of Internet Explorer).  See this page for more information:
+http://stackoverflow.com/questions/664315/internet-explorer-8-prototypes-and-xmlhttprequest
+
+However, csrf-magic.js will
 automatically detect and play nice with the following JavaScript frameworks:
 
     * jQuery
     * Prototype
-    * script.aculo.us (via Prototype)
     * MooTools
-    * Yahoo UI Library
     * Ext
     * Dojo
 
-If you are not using any of these JavaScript libraries, AJAX requests will
-only work for browsers with support for XmlHttpRequest.prototype (this excludes
-all versions of Internet Explorer).
+(Note 2013-07-16: It has been a long time since this manual support has
+been updated, and some JavaScript libraries have placed their copies of XHR
+in local variables in closures, which makes it difficult for us to monkey-patch
+it in automatically.)
 
 To rewrite your own JavaScript library to use csrf-magic.js, you should modify
 your function that generates XMLHttpRequest to have this at the end:

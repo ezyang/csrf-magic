@@ -53,6 +53,8 @@ $GLOBALS['csrf']['rewrite-js'] = false;
  * will become invalid.
  */
 $GLOBALS['csrf']['secret'] = '';
+// nota bene: library code should use csrf_get_secret() and not access
+// this global directly
 
 /**
  * Set this to false to disable csrf-magic's output handler, and therefore,
@@ -362,7 +364,7 @@ function csrf_generate_secret($len = 32) {
  */
 function csrf_hash($value, $time = null) {
     if (!$time) $time = time();
-    return sha1($GLOBALS['csrf']['secret'] . $value . $time) . ',' . $time;
+    return sha1(csrf_get_secret() . $value . $time) . ',' . $time;
 }
 
 // Load user configuration

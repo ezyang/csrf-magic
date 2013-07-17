@@ -41,7 +41,9 @@ if (isset($_POST['ajax'])) {
 </FORM>
 <form action="" method="post">
   This form fails CSRF validation (we cheated and overrode the CSRF token
-  later in the form.) <input type="submit" name="__csrf_magic" value="invalid" />
+  later in the form.) <br />
+  <input type="text" name="foobar[2]" />
+  <input type="submit" name="__csrf_magic" value="invalid" />
 </form>
 <form action="" method="get">
   This form uses GET and is thus not protected.

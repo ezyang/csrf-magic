@@ -242,12 +242,40 @@ function csrf_get_tokens() {
     return 'invalid';
 }
 
+function csrf_flattenpost($data) {
+    $ret = array();
+    foreach($data as $n => $v) {
+        $ret = array_merge($ret, csrf_flattenpost2(1, $n, $v));
+    }
+    return $ret;
+}
+function csrf_flattenpost2($level, $key, $data) {
+    if(!is_array($data)) return array($key => $data);
+    $ret = array();
+    foreach($data as $n => $v) {
+        $nk = $level >= 1 ? $key."[$n]" : "[$n]";
+        $ret = array_merge($ret, csrf_flattenpost2($level+1, $nk, $v));
+    }
+    return $ret;
+}
+
 /**
  * @param $tokens is safe for HTML consumption
  */
 function csrf_callback($tokens) {
+    // (yes, $tokens is safe to echo without escaping)
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
-    echo "<html><head><title>CSRF check failed</title></head><body>CSRF check failed. Please enable cookies.<br />Debug: ".$tokens."</body></html>
+    $data = '';
+    foreach (csrf_flattenpost($_POST) as $key => $value) {
+        if ($key == $GLOBALS['csrf']['input-name']) continue;
+        $data .= '<input type="hidden" name="'.htmlspecialchars($key).'" value="'.htmlspecialchars($value).'" />';
+    }
+    echo "<html><head><title>CSRF check failed</title></head>
+        <body>
+        <p>CSRF check failed. Your form session may have expired, or you may not have
+        cookies enabled.</p>
+        <form method='post' action=''>$data<input type='submit' value='Try again' /></form>
+        <p>Debug: $tokens</p></body></html>
 ";
 }
 

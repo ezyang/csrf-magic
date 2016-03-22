@@ -217,7 +217,8 @@ function csrf_get_tokens() {
     $secret = csrf_get_secret();
     if (!$has_cookies && $secret) {
         // :TODO: Harden this against proxy-spoofing attacks
-        $ip = ';ip:' . csrf_hash($_SERVER['IP_ADDRESS']);
+        $IP_ADDRESS = (isset($_SERVER['IP_ADDRESS']) ? $_SERVER['IP_ADDRESS'] : $_SERVER['REMOTE_ADDR']);
+        $ip = ';ip:' . csrf_hash($IP_ADDRESS);
     } else {
         $ip = '';
     }
@@ -327,7 +328,8 @@ function csrf_check_token($token) {
             if ($GLOBALS['csrf']['user'] !== false) return false;
             if (!empty($_COOKIE)) return false;
             if (!$GLOBALS['csrf']['allow-ip']) return false;
-            return $value === csrf_hash($_SERVER['IP_ADDRESS'], $time);
+            $IP_ADDRESS = (isset($_SERVER['IP_ADDRESS']) ? $_SERVER['IP_ADDRESS'] : $_SERVER['REMOTE_ADDR']);
+            return $value === csrf_hash($IP_ADDRESS, $time);
     }
     return false;
 }

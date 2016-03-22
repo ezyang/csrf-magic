@@ -379,7 +379,7 @@ function csrf_get_secret() {
  */
 function csrf_generate_secret($len = 32) {
     $r = '';
-    for ($i = 0; $i < 32; $i++) {
+    for ($i = 0; $i < $len; $i++) {
         $r .= chr(mt_rand(0, 255));
     }
     $r .= time() . microtime();

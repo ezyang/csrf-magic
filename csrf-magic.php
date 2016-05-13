@@ -37,7 +37,7 @@ $GLOBALS['csrf']['expires'] = 7200;
  * $fatal == true (see csrf_check). This will usually output an error message
  * about the failure.
  */
-$GLOBALS['csrf']['callback'] = 'csrf_callback';
+$GLOBALS['csrf']['callback'] = 'vtResponseForIllegalAccess'; //'csrf_callback'
 
 /**
  * Whether or not to include our JavaScript library which also rewrites
@@ -45,7 +45,7 @@ $GLOBALS['csrf']['callback'] = 'csrf_callback';
  * with supported JavaScript libraries in Internet Explorer; see README.txt for
  * a list of supported libraries.
  */
-$GLOBALS['csrf']['rewrite-js'] = false;
+$GLOBALS['csrf']['rewrite-js'] = 'libraries/csrf-magic/csrf-magic.js';
 
 /**
  * A secret key used when hashing items. Please generate a random string and
@@ -76,7 +76,7 @@ $GLOBALS['csrf']['allow-ip'] = true;
  * whether or not to allow the request. This is a shortcut implementation
  * very similar to 'key', but we randomly set the cookie ourselves.
  */
-$GLOBALS['csrf']['cookie'] = '__csrf_cookie';
+$GLOBALS['csrf']['cookie'] = '__vtrfck'; // __csrf_cookie
 
 /**
  * If this information is available, set this to a unique identifier (it
@@ -108,7 +108,7 @@ $GLOBALS['csrf']['key'] = false;
  * The name of the magic CSRF token that will be placed in all forms, i.e.
  * the contents of <input type="hidden" name="$name" value="CSRF-TOKEN" />
  */
-$GLOBALS['csrf']['input-name'] = '__csrf_magic';
+$GLOBALS['csrf']['input-name'] = '__vtrftk'; // __csrf_magic
 
 /**
  * Set this to false if your site must work inside of frame/iframe elements,
@@ -142,33 +142,51 @@ function csrf_ob_handler($buffer, $flags) {
     // to check if the page is *actually* HTML. We don't begin rewriting until
     // we hit the first <html tag.
     static $is_html = false;
+    static $is_partial = false;
+    
     if (!$is_html) {
         // not HTML until proven otherwise
         if (stripos($buffer, '<html') !== false) {
             $is_html = true;
         } else {
-            return $buffer;
+
+			// Customized to take the partial HTML with form
+			$is_html = true;
+			$is_partial = true;
+
+			// Determine based on content type.
+			$headers = headers_list();
+			foreach ($headers as $header) {
+				if ($is_html) break;
+				else if (stripos('Content-type', $header) !== false && stripos('/html', $header) === false) {
+					$is_html = false;
+				}
+			}
+        
+			if (!$is_html) return $buffer;
         }
     }
+    $count=1;
     $tokens = csrf_get_tokens();
     $name = $GLOBALS['csrf']['input-name'];
     $endslash = $GLOBALS['csrf']['xhtml'] ? ' /' : '';
     $input = "<input type='hidden' name='$name' value=\"$tokens\"$endslash>";
     $buffer = preg_replace('#(<form[^>]*method\s*=\s*["\']post["\'][^>]*>)#i', '$1' . $input, $buffer);
-    if ($GLOBALS['csrf']['frame-breaker']) {
-        $buffer = str_ireplace('</head>', '<script type="text/javascript">if (top != self) {top.location.href = self.location.href;}</script></head>', $buffer);
+    if ($GLOBALS['csrf']['frame-breaker'] && !$is_partial) {
+        $buffer = preg_replace('/<\/head>/', '<script type="text/javascript">if (top != self) {top.location.href = self.location.href;}</script></head>', $buffer,$count);
     }
-    if ($js = $GLOBALS['csrf']['rewrite-js']) {
-        $buffer = str_ireplace(
-            '</head>',
+    if (($js = $GLOBALS['csrf']['rewrite-js']) && !$is_partial) {
+        $buffer = preg_replace(
+            '/<\/head>/',
             '<script type="text/javascript">'.
                 'var csrfMagicToken = "'.$tokens.'";'.
                 'var csrfMagicName = "'.$name.'";</script>'.
             '<script src="'.$js.'" type="text/javascript"></script></head>',
-            $buffer
+            $buffer,$count
         );
         $script = '<script type="text/javascript">CsrfMagic.end();</script>';
-        $buffer = str_ireplace('</body>', $script . '</body>', $buffer, $count);
+        
+        $buffer = preg_replace('/<\/body>/', $script . '</body>', $buffer, $count);
         if (!$count) {
             $buffer .= $script;
         }
@@ -215,10 +233,9 @@ function csrf_get_tokens() {
     // any cookies. It may or may not be used, depending on whether or not
     // the cookies "stick"
     $secret = csrf_get_secret();
-    if (!$has_cookies && $secret) {
+    if (!$has_cookies && $secret && isset($_SERVER['IP_ADDRESS'])) {
         // :TODO: Harden this against proxy-spoofing attacks
-        $IP_ADDRESS = (isset($_SERVER['IP_ADDRESS']) ? $_SERVER['IP_ADDRESS'] : $_SERVER['REMOTE_ADDR']);
-        $ip = ';ip:' . csrf_hash($IP_ADDRESS);
+        $ip = ';ip:' . csrf_hash($_SERVER['IP_ADDRESS']);
     } else {
         $ip = '';
     }
@@ -281,6 +298,15 @@ function csrf_callback($tokens) {
 }
 
 /**
+ * Function to echo response when CSRF check fails
+ * This should be helpful in production. For debigging use csrf_callback().
+ * It is configurable by setting $GLOBALS['csrf']['callback'] in this file
+ */
+function vtResponseForIllegalAccess() {
+    echo 'Invalid request';
+}
+
+/**
  * Checks if a composite token is valid. Outward facing code should use this
  * instead of csrf_check_token()
  */
@@ -328,8 +354,7 @@ function csrf_check_token($token) {
             if ($GLOBALS['csrf']['user'] !== false) return false;
             if (!empty($_COOKIE)) return false;
             if (!$GLOBALS['csrf']['allow-ip']) return false;
-            $IP_ADDRESS = (isset($_SERVER['IP_ADDRESS']) ? $_SERVER['IP_ADDRESS'] : $_SERVER['REMOTE_ADDR']);
-            return $value === csrf_hash($IP_ADDRESS, $time);
+            return $value === csrf_hash($_SERVER['IP_ADDRESS'], $time);
     }
     return false;
 }
@@ -360,7 +385,7 @@ function csrf_start() {
 function csrf_get_secret() {
     if ($GLOBALS['csrf']['secret']) return $GLOBALS['csrf']['secret'];
     $dir = dirname(__FILE__);
-    $file = $dir . '/csrf-secret.php';
+    $file = $dir . '/../../config.csrf-secret.php';
     $secret = '';
     if (file_exists($file)) {
         include $file;
@@ -381,7 +406,7 @@ function csrf_get_secret() {
  */
 function csrf_generate_secret($len = 32) {
     $r = '';
-    for ($i = 0; $i < $len; $i++) {
+    for ($i = 0; $i < 32; $i++) {
         $r .= chr(mt_rand(0, 255));
     }
     $r .= time() . microtime();

@@ -2,13 +2,13 @@
 
 ## 1.1.0 released 2020-02-23
 
-### Bug Fixes
+Bug Fixes
 
 - In some server environments, being behind a load balancer and enabling IP
   restrictions would be ineffective as other users would all appear to be from
   the same remote address
 
-### Features
+Features
 
 - Allow logging of the CSRF process which is useful for third party develoeprs
   when they are trying to incorporate the library to see what steps are being
@@ -39,33 +39,33 @@
 
 ## 1.0.5 released 2014-07-24
 
-### Bug Fixes
+Bug Fixes
 
 - In some server environments, IP address was not being detected properly.
   Thanks Bianka Martinovic for reporting.
 
-### Security Fixes
+Security Fixes
 
 - Hashing now uses an HMAC to prevent length extension attacks.
 
-### Features
+Features
 
 - New option 'disable' which allows you to conditionally disable the CSRF
   protection.  Requested by Justin Carlson.
 
 ## 1.0.4 released 2013-07-17
 
-### Security Fixes
+Security Fixes
 
 - When secret key was not explicitly set, it was not being used by the
   `csrf_hash()` function.  Thanks sparticvs for reporting.
 
-### Features
+Features
 
 - The default 'CSRF check failed' page now offers a handy 'Try again' button,
   which resubmits the form.
 
-### Bug Fixes
+Bug Fixes
 
 - The fix for 1.0.3 inadvertantly turned off XMLHttpRequest
   overloading for all browsers; it has now been fixed to only
@@ -73,7 +73,7 @@
 
 ## 1.0.3 released 2012-01-31
 
-### Bug Fixes
+Bug Fixes
 
 - Internet Explorer 8 adds support for XMLHttpRequest.prototype,
   but this support is broken for method overloading.  We
@@ -86,7 +86,7 @@
 
 ## 1.0.2 released 2009-03-08
 
-### Security Fixes
+Security Fixes
 
 - Due to a typo, csrf-magic accidentally treated the secret key
   as always present.  This means that there was a possible CSRF
@@ -114,9 +114,8 @@
 - ClickJacking protection using an iframe breaker.  Disable with
   csrf_conf('frame-breaker', false).
 
-### Bug Fixes
+Bug Fixes
 
 - CsrfMagic.send() incorrectly submitted GET requests twice,
   once without the magic token and once with the token.  Reported
   by Kelly Lu <lubird@gmail.com>.
-

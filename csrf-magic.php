@@ -193,7 +193,7 @@ function csrf_callback($tokens) {
 	<body>
 		<p>
 
-			CSRF check failed. Your form session may have expired, or you may not have cookies 
+			CSRF check failed. Your form session may have expired, or you may not have cookies
 			enabled.
 
 		</p>
@@ -328,7 +328,7 @@ function csrf_get_secret() {
 
 	if (empty($secret)) {
 		if (isset($GLOBALS['csrf']['path_secret'])) {
-			$files[] = $GLOBAL['csrf']['path_secret'];
+			$files[] = $GLOBALS['csrf']['path_secret'];
 		}
 		$files[] = __DIR__ . '/csrf-secret.php';
 	}

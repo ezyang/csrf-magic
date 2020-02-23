@@ -129,7 +129,7 @@ function csrf_get_tokens() {
 	csrf_start();
 
 	// These are "strong" algorithms that don't require per se a secret
-	if (session_id()) {
+	if ($GLOBALS['csrf']['session'] && session_id()) {
 		$token = 'sid:' . csrf_hash(session_id()) . $ip;
 	} elseif ($GLOBALS['csrf']['cookie']) {
 		$val = csrf_generate_secret();

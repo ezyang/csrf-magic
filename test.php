@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 function csrf_startup() {
     csrf_conf('rewrite-js', 'csrf-magic.js');
